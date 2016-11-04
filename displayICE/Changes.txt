@@ -1,0 +1,654 @@
+---------------------------------------------------Updates-------------------------------------------------------
+<140207>
+	Fixed a bug where imageClick was not functioning correctly when images are flipped.
+	- variable_analysis4.m
+	Fixed a bug where deletion of converged points didn't delete segmented regions and intensity ratios.
+	- trackAll.m
+	- trackAll3D.m
+	Some keyboard shortcuts are supported.
+	- variable_analysis4.m
+		'r': renameNeuron
+		'w': toggle UD image flip
+		'd': toggle LR image flip
+	Rename neuron dialog now accepts enter key. The following files are modified from the original and added
+	to 'Library' folder.
+	- inputdlg2.m
+	- setdefaultbutton2.m
+	- getnicedialoglocation2.m
+	Added synchronizing N-list and z-slider checkbox
+	- variable_analysis4.m
+	- createGUI.m
+	- getPositionsUI.m
+	variable_analysis4.m now accepts input arguments to excute internal nested functions from outside.
+	- variable_analysis4.m
+		If 'flgGUI' is false, then it should omit all GUI related lines.
+		'command' can be specified as to which netsted function(s) will be performed.
+	Time Serises window now opens right next to the main fig. It also closes when the main fig is deleted.
+
+<140130>
+	Implemented a rudimentary algorithm for combining convergent tracked points
+	Affected files:
+	 - trackAll3D.m
+	 - trackAll.m
+
+	Implemented checkboxes to flip the image (up-down and/or left-right)
+	Affected files:
+	 - createGUI.m
+	 - getPositionsUI.m
+	Affected functions:
+	 - displayImage
+
+<130123>
+	Fixed 'Draw overlays' section of the function DisplayImage
+
+<140116>
+	All the changes made in this version (from 131220) are indicated by '% Added 140116'
+	
+	Fixed various bugs
+	Added handles.SelectZ dropdown menu to move between neuron lists for different z-levels
+	
+	Affected files:
+	 - createGUI.m
+	 - getPositionsUI.m
+	Affected functions in variable_analysis4.m:
+	 - initialize
+	 - displayImage
+	 - initializeOverlays
+	 - ImageClick
+	 - selectList
+	 - selectZ (new)
+	 - delNeuron
+	 - renameNeuron
+
+<131220>
+
+	variable_analysis4.m
+	 - (line 25): added crop_size_z to be used in 3D tracking
+	 - function getSeedsGateway: decides between 3D and 2D methods for getting seeds
+	 - function trackAllGateway: decides between 3D and 2D methods for tracking all points
+	 - function trackSelGateway: decides between 3D and 2D methods for tracking the selected point
+	 - function enableOptions (line 817): enables check3D option which affects three functions mentioned above
+
+	+ External m-files (All contained in 3D subfolder)
+		getSeeds3D.m
+		grad_flow_segm3D.m
+		individual_analysis.trackGVF3D.m
+		local_max_gvf3D.m
+		trackAll3D.m
+		trackNeuron3D.m
+		trackSel3D.m
+
+<131216>
+	variable_analysis4.m
+         - New major version of the core Variable Analysis script that supports easier integration of 
+	   external functions.
+	 - This program contains only the essential functions as nested functions; all the other functions
+	   are provided by external m-files.
+
+	+ External m-files
+		createGUI.m
+		 - Creates a figure window, inner pannels, and all the uicontrols except for sliders.
+		createSliders.m
+		 - Creates sliders for T, Z, and RGB controls.
+		getSeeds.m
+		 - Externalized version of "getSeeds" function.
+		trackAll.m
+		 - Externalized "trackAll".
+		trackSel.m
+		 - Externalized "trackSel".
+		registerImagesSubpixel.m
+		 - New function for image registration with subpixel resolution. User can utilize GPU-enhanced
+		   algorithm to speed up the process.
+		shiftImagesSubpixel.m
+		 - Shifts images according to XY values calculated by "registerImagesSubpixel".
+		   Uses CPU.
+		shiftImagesSubpixelGPU.m
+		 - Shifts images according to XY values calculated by "registerImagesSubpixel". 
+		   Uses GPU for faster calculation.
+		makeMovie.m
+		 - Makes and exports a movie file from the loaded images.
+		progressBar.m
+		 - Displays a progress bar in status bar for lengthy calculations.
+		scrollableTimeSeries.m
+		 - Creates interactive time series browser.
+
+	+ How to Add External Functions
+		 - All the GUI handles are now stored in "handles" structure. Your new external function
+		   needs to take this structure as an input argument if you are accessing GUI objects from
+		   external functions.
+		 - Likewise, to call nested functions of "variable_analysis4.m" from external functions, the
+		   function handles are stored in "hFunctions" structure. To add a nested function to the
+		   structure, use "hFunctions.yourFunctionName = @youFunctionName" format in "Function
+		   Handles" section of "variable_analysis4.m".
+		 - Passing arguments to external functions from GUI callbacks has some technical limitations.
+		   To avoid such difficulties, I have created "Gateway Functions" in "variable_analysis4.m".
+		   Within the gateway functions you can add any arguments even from shared variables.
+
+	+ Example (found in "variable_analysis4.m" and its support functions):
+
+		First, you need to add a function handle to the "hFunctions" structure in "variable_analysis4.m",
+		which should look like this:
+
+			hFunctions.trackAllGateway = @trackAllGateway;
+		
+		"@trackAllGateway" indicates a function handle of the function "trackAllGateway".
+
+		Then, I define the gateway function as follows:
+
+		    function trackAllGateway(~, ~)
+		        neurons = trackAll(handles, hFunctions, neurons,...
+		        dimX, dimY, dimZ, dimT, crop_size_r, crop_size_c, modeImageTrack,...
+		        ND, pathICE, imgMap, poolsize);
+		    end
+
+		The first two arguments are "handles" and "hFunctions" structures, which, in most cases,
+		are essential when calling from external functions. Then you can add any variables you need in
+ 		the external function; in this case I add 12 other variables that are required in "trackAll"
+ 		function. Make sure you have proper return argument(s) ("neurons" in this case), so that the shared
+ 		variable is updated after the execution.
+
+		For a callback, I design a uicontrol component in "createGUI.m" as follows:
+
+			handles.buttonTrackAll = uicontrol(                     ...
+			    'String',               'Track All',                ...
+			    'Style',                'pushbutton',               ...
+			    'Parent',               handles.panelTrack,         ...
+			    'Units',                'normalized',               ...
+			    'Position',             posButtonTrackAll,          ...
+			    'FontName',             fName,                      ...
+			    'FontSize',             fSize,                      ...
+			    'Enable',               'off',                      ...
+			    'Callback',             hFunctions.trackAllGateway);
+
+	   	You don't need to give input arguments to the callback function as the gateway function will
+		take care of it.
+
+		Inside the "trackAll.m" function, I need to know if the checkbox for image registration is checked. 
+		To access that GUI object, use the "handles" structure like this:
+			
+			get(handles.checkRegister, 'Value')
+		
+		This will tell you if the checkbox is checked.
+
+		Then, if it's checked, I need to run "registerImagesSubpixel" function, which is another external
+		function. To do so, I would call the gateway function of the "registerImagesSubpixel" as follows:
+		
+			hFunctions.registerImagesGateway();
+
+		Make sure you add an empty pair of parentheses even though you have no arguments to pass. Calling
+		the function without them will just return a name of the function.
+		
+		The gateway function for "registerImagesSubpixel" is in "varialble_analysis4.m" as follows:
+
+		    function registerImagesGateway(~, ~)
+		        registerImagesSubpixel(handles, hFunctions, pathICE,...
+		            imgRAM, modeImage, sVar, dimX, dimY, dimZ, dimT);
+		    end
+
+		"registerImagesSubpixel" function has a gateway function because a GUI component has a callback
+		with some arguments to pass to it. From external functions, you can either call the gateway function
+		("registerImagesGateway") or the actual function ("registerImagesSubpixel") directly, depending
+		on the arguments to pass. From "trackAll.m", I don't have anything to pass to
+ 		"registerImagesSubpixel", so I simply call its gateway function.
+		
+
+<131126>
+	loadICE.m
+	 - Faster and simpler way to read ice files. Use this function instead of openICE for better performance
+
+	variable_analysis3.m
+	 - Re-wrote the image registration function for better performance
+	 - Fixed a bug where registered images were overlaid with original images
+	 - Re-designed overlay drawings for faster display performance
+	 - Status bar with progress bars is implemented for tasks that take long time to complete
+	 - Display weight selection based on various situation is implemented, but later replaced by automatic
+	   display update timing capability
+	 - Automatic display update timing is implemented and optimized for maximum display update performance
+	 - Changed neuron selection GUI design for clarity
+	 - quitFile function is called by CloseRequestFcn callback when figure close command is issued
+	 - Main figure now considers location and size of Windows taskbar
+	 - All open file IDs are closed when quiting the script
+	 - Fixed a bug for opening non-default number of image color channels
+	 - Changed internal variable of images to cells to avoid repetitive calling of multiple channels
+
+	
+<131029>
+	trackNeuron3D.m
+	 - Fixed a bug which resulted in wrong intensity ratio output
+	
+	variable_analysis3D.m
+	 - Fixed: "Merge"
+
+<131025>
+	variable_analysis3D.m
+	 - Fixed: "Delete Neuron", "Rename Neuron"
+
+<131015>
+	variable_analysis3D.m
+	 - Implemented: "Obtain initial points"
+	 - Takes about few minutes
+	 - Main programs: local_max_gvf3D.m, grad_flow_segm3D.m
+	 - Main adjustable parameters: sink_conv_dist, min_n in grad_flow_segm3D.m
+
+<131008>
+	variable_analysis3.m
+	 - Fixed a bug in which an error would occur if the gradient vector field is entirely zero.
+	variable_analysis3D.m
+	 - 3D version of variable_analysis3.m (131008).
+	 - Implemented: "Add a neuron", "Track Selected", "Track All", "Show Time Series", "Display Region"
+	 - Not implemented: "Obtain initial points"
+
+<131007>
+    variable_analysis3.m
+    - Fixed a bug in which Img-3*.ice image could not be loaded correctly in "registered image" mode
+    - After image registration, Initialize function is called to deal with "mapped" and "RAM" modes.
+    - Added makeMovie functionality
+
+<130913>
+    variable_analysis3.m
+    - Combined changes from 130910 and 130911.
+<130910>
+	variable_analysis3.m
+	 - Implemented getting initial seeds from all z-levels
+	 - Displaying cropped regions fixed
+	 - Included option for small-sized figures
+<130910>
+    variable_analysis3.m
+    - Now uses memmapfile to load images to RAM and share it during parfor loops.
+    - Added a pulldown menu uicontrol to choose image modes (replacing 'quit' button).
+    - Separate image modes for display and tracking.
+    trackNeuron.m
+    - Accepts mapped memory for parfor memory sharing
+    readImage.m
+    - Accepts mapped memory as image source
+<130829>
+    variable_analysis3.m
+    - Save and load function with safety features
+    - Loads neurons cell array when the user opens ICE file
+    - Extracts n_list from neurons when loading the variable
+    - New interactive dynamic calcium plots
+    - Java scroll bars instead of MATLAB's uicontrol
+    - Implemented RAM mode in which all images are loaded to RAM to speed up image display
+    readNeurons.m
+    - Extracts user-specified field of all the structures inside neurons cell array
+
+<130827>
+    variable_analysis3.m
+    - Dimension calculations changed to ICE header
+    - 3D image handling by ND cell
+    - Background subtraction added before image smoothing and segmentation
+    - Changed segm in a way that it stores only the cropped regions to save memory space
+    - Crop positions are stored in neurons cell
+    - Uses local_max_gvf.m to find initial points
+    - Externalized trackNeuron function for parfor loop
+    - Implemented parallel computation
+    - Fixed a bug which caused error when neuron was at the edges by padding the cropped images with zeros
+    - Added IR image superimposition
+    - Added RGB display adjustment
+    - Added Z-stack merge display
+    - Save and load analysis implemented
+    - Modified GUI to display the images with 2x magnification
+    readImage.m
+    - Accepts 7 input arguments for the new 3D image handling
+    local_max_gvf.m
+    - Modified version of local_max function. It utilizes gvf tracking to find initial nuclei locations
+
+<130820>
+	variable_analysis3.m
+	 - Built upon individual_analysis.m by extending its single-neuron processing to all detected neurons
+
+<130813>
+	combine_z_levels.m
+	 - Fixed bug regarding folder name sorting
+	variable_analysis2.m
+	 - Implemented displaying Img-3 (IR)
+
+<130812>
+	combine_z_levels.m
+	 - Now deals with one variable at a time so as to prevent memory overload for larger files
+	 - Still takes a lot of memory but shouldn't go over 20GB. More permanent solution will be worked on
+
+<130807>
+	New programs: individual_analysis_trackGVF.m and timeseries_analysis.m
+	individual_analysis_trackGVF.m is a version of gradient_flow_track.m used for individual_analysis.m
+    timeseries_analysis.m takes in a variable containing two or more intensity time series (created by
+    individual_analysis.m or variable_analysis2.m) and compares them with each other.
+
+<130801>
+	New programs: track_3D.m and individual_analysis.m
+	track_3D.m combines the same neurons in different z-levels
+	individual_analysis.m processes individual neurons
+	
+	processICE_master_file.m
+	 - Automatically calls on track_3D.m if all the z-levels have been processed
+
+<130725>
+	variable_analysis2 v0.02
+	 - Reprocessing option reenabled
+	 - Implemented capability to select a point by clicking directly on the image
+	 - Implemented temperature graph display
+
+<130723>
+	variable_analysis v0.07
+	 - Fixed minor bug involving neuron merging.
+	 - From now, the development will focus on variable_analysis2.m
+	 
+	variable_analysis2 v0.01
+	 - The program is now functional. Reprocessing option disabled (may be removed entirely)
+
+<130719>
+	variable_analysis v0.06
+	 - Implemented the option to merge one particle into another (time series and centre points)
+
+	processICE_master_file.m
+	 - If all the z-levels have been analyzed, it now integrates all the variables in ICE files through
+	   combine_z_levels.m
+	
+	combine_z_levels.m
+	 - Can be called by processICE_master_file.m or be called directly.
+	 - Receives the path to the folder containing the original ICE files (Img-1 and Img-2) and
+	   integrates all the relevant variables in ICE files.
+	 - Assumes that all the z-levels have been already processed.
+	 - Note: As for now, nothing is done with the ICE files. Plan is to change the variable_analysis.m to use
+	   the ICE files instead.
+
+<130718>
+	processICE_par_direct.m
+	 - Now uses movement_correction_image.m instead of movement_correction_in.m
+	 - Image registration is performed before the segmentation on the original images
+	 - This fixes some serious issues at the cost of introducing additional minor ones.
+
+	movement_correction_imge.m
+	 - Performs image registration on the images (i.e. originals) themselves rather than on the points
+
+<130716>
+	Important: All the image files other than those containing gradient vector fields now have uint16 type
+				rather than double (Decreases the size significantly)
+
+	variable_analysis v0.05
+	 - Implemented the option to save the particular intensity time series selected
+
+<130712>
+	movement_correction_in.m
+	 - Implemented image registration to compensate for worm movement
+	 - Increases the runtime by about a minute for each z-level
+	 - Note: Currently, there is a bug regarding displaying GVF
+
+<130710>
+	gradient_flow_track.m
+	 - Formally implemented the region merging process
+	 - Included the code that will change sink points to centre of mass points (not used)
+	 - Above measures do not affect the robustness by a lot. That needs further investigation.
+	 
+	variable_analysis.m
+	 - Implemented region average intensity display for 'Show mask' option. It should be
+	 	helpful in debugging/region merging.
+	 
+	avg_int_region.m
+	 - Separated the average intensity calculation process from average_intensity.m
+	 - Used by average_intensity.m and variable_analysis.m
+
+<130708>
+	gradient_flow_track.m
+	 - Instituted connectivity requirement for merging two trajectories
+
+	ordered_centre_of_mass.m
+	 - Fixed various bugs including duplicate assignment
+	 
+	variable_analysis.m
+	 - Implemented region area display for 'Show mask' option
+
+<130705>
+	variable_analysis.,
+	 - Implemented restoring default
+
+<130704>
+	variable_analysis.m v0.04
+	 - Implemented segmented image display
+	 - Implemented neuron re-tracking using different max_speed
+	
+    Added post_process_in.m
+     - Alternative to post_process.m.
+     - Implemented directly to the parfor loop for segmentation
+     - Increased speed
+
+    processICE_multifolder.m
+    processICE_master_file.m
+     - Removed references to ICE headers. Using infoND to extract number of images instead.
+
+<130703>
+	variable_analysis.m v0.03
+	 - Implemented re-processing: removing small regions option with the user-specified threshold
+	
+	processICE_master_file.m
+	 - If the selected z-level is already analyzed (variable folder exist), the process is skipped
+
+<130702>
+	Added post_process.m
+	 - Facilitates local threholding after the initial gradient flow tracking & removes specks
+	 - Note: Currently, this increases the running speed significantly.
+	 -       Can be disabled by commenting out line 131 in processICE_par_direct.m
+
+<130628>
+	processICE_multifolder.m v0.02
+	 - Implemented selecting z-levels to process
+
+	variable_analysis.m v0.02
+	 - Fixed bugs
+
+	gradient_flow_track.m
+	 - Changed min_n from 6 to 1. Further testing is required for the optimal value.
+
+	ordered_centre_of_mass.m
+	 - Changed max_speed from 10 to 6. This mitigates the problem of wrong particle assignments.
+
+<130627>
+
+	variable_analysis.m v0.02
+	 - Fixed variable_analysis.m memory leak issue
+	 - Substantially increased the scrolling speed in variable_analysis.m
+	 - Implemented original/processed option, mask display option, gradient vector field display option
+
+	pre_process.m
+	 - Removed morphological opening. This enables more consistent neuron detection
+
+---------------------------------------------------Guide----------------------------------------------------------
+
+<Programs to be used directly>
+
+	processICE_multifolder.m
+	variable_analysis.m
+	variable_analysis2.m
+	variable_analysis3.m
+	combine_z_levels.m
+	track_3D.m
+	individual_analysis.m
+    timeseries_analysis.m
+
+<Supporting programs>
+
+	processICE_multifolder.m
+	 - processICE_master_file.m
+	   - processICE_par_direct.m
+	     - movement_correction_image.m
+	     - pre_process.m
+	     - gradient_flow_segm.m
+	       - gradient_flow_track.m
+	     - post_process_in.m
+	     - ordered_centre_of_mass.m
+	     - ordered_regions.m
+	     - average_intensity.m
+	   - combine_z_levels.m
+
+	variable_analysis.m
+	 - ordered_centre_of_mass.m (for reprocessing)
+	 - ordered_regions.m (for reprocessing)
+	 - average_intensity.m (for reprocessing)
+	 
+	variable_analysis2.m
+	 - ordered_centre_of_mass.m (for reprocessing)
+	 - average_intensity.m (for reprocessing)
+	
+	combine_z_levels.m
+	 - saveICE.m
+
+	variable_analysis3.m
+	 - individual_analysis_trackGVF.m
+	 - movement_correction_image.m
+
+<Utility functions>
+
+	avg_int_region.m 	Obtains average intensity of the given region in a given image.
+						Used in average_intensity.m , variable_analysis.m, "2, and "3
+	cell_to_mat.m		Converts cell (i.e. c_orig) to a matrix. Called by variable_analysis.m, and "2
+	colorcode.m 		Colorcodes each region for segmented image display in variable_analysis.m, and "2.			
+	eucl_dist.m			Used to get the distance between two points, mainly used in ordered_centre_of_mass.m
+	extract_vars.m		Extracts c_oCoM and m_aIratio and combines them. Used by variable_analysis2.m
+	local_max.m			Seeks to find local maxima points in an image (used in variable_analysis3.m)
+	mat_to_cell.m		Converts matrix to a cell. Used by variable_analysis2.m
+	openICE.m			Taken from multiNeuron v0.05 folder. Called by variable_analysis2.m
+	openICE_double.m	Identical to openICE.m except the ICE file is opened in double (for gradient fields)
+	otsu.m				Used for threshold-segmentation, mainly used in pre_process.m
+	remove_neuron.m		Remove centre point data and time-series for a select neuron. Used in track_3D.m
+	update_vars.m		Write updated c_centre and c_aIratio into variables file. Used in track_3D.m
+	readImage.m			Reads an image from the ICE file. Used by variable_analysis2.m
+	writeICE.m			Taken from multiNeuron v0.05 folder. Called by saveICE.m
+	writeICE_double.m	Identical to writeICE.m except the ICE file is written in double (for gradient fields)
+
+<processICE_multifolder.m>
+
+	When run directly (without any arguments), it should prompt the user to select a folder.
+
+	Select a folder containing one or more subfolders of the form "yymmdd-####".
+	Each subfolder should contain two ICE files of the form "Img-n_yymmdd-####.ice", where n = 1,2
+
+	After the folder selection, another window should appear prompting the user to select the particular
+	subfolders to process. After selecting the subfolders, hit process button.
+	
+	If the "Select" option is checked, windows will pop up successively for each subfolder prompting the
+	user to select particular z-levels to analyze for each ICE file.
+	This is mainly useful for testing purposes, in the cases where processing the entire file is unnecessary.
+
+	Depending on the files, each ICE file (i.e. each subfolder) could take any time between 10 to 30 
+	minutes to process.
+
+	After the program finishes running, each subfolder should contain folders of the form "z=#", where #
+	indicates the particular z-level. Each z-level is processed independently from each other.
+
+	Each of "z=#" contains "processed_variables.mat", which can be loaded in MATLAB via the command
+	load('path\processed_variables.mat'). They contain:
+		c_dx		(cells containing x-component of the gradient vector fields for each image)
+		c_dy		(cells containing y-component of the gradient vector fields for each image)
+		c_oCoM		(cells containing centre points for each image)
+		c_orig1		(cells containing original images for Img-1)
+		c_orig2		(cells containing original images for Img-2)
+		c_proc1		(cells containing processed images for Img-1)
+		c_proc2		(cells containing processed images for Img-2)
+		c_segm		(cells containing segmented images with region labels)
+		m_aIratio	(matrix containing average intensity ratio for each particle in each image)
+
+	The only missing variable of interest is masked regions. This was because the variable was too large
+	that it won't be saved. It can be easily retrieved via the command
+	c_regions = ordered_regions(c_segm, c_oCoM);
+	This process does not take long.
+
+<variable_analysis.m>
+
+	When run directly (without any arguments), it should open a window.
+	At the bottom, in the Menu panel, there should be two buttons called "Open" and "Quit".
+	The latter should be self-explanatory. Click the former and the user is prompted to select a .mat file.
+	Select a "processed_variables.mat" produced by "processICE_multifolder.m".  If a wrong .mat file is 
+	selected, an error message will display.
+
+	After waiting a while, the right panel should display the image while the left panel should display the
+	intensity plot.
+
+	The horizontal slider below the image can be used to scroll through the images while the vertical
+	slider next to the intensity plot can be used to scroll through the plots for different neurons.
+	
+	Radio button groups:
+		Image Selection
+		Image 1			:	Display Img-1
+		Image 2			:	Display Img-2
+		Image Combined	:	Display the superposition of Img-1 and Img-2
+
+		Image Processed
+		Original		:	Display original images (c_orig1/c_orig2)
+		Processed		:	Display processed images (c_proc1/c_proc2)
+		Segmented		:	Display segmented images (c_segm)
+
+	Toggle buttons:
+		Plot points		:	Superimpose centre points (red crosses) with the image displayed.
+							Green cross indicates the neuron selected in the intensity plot.
+
+		Plot labels		:	Superimpose label numbers with the image displayed.
+
+		Show mask		:	Show masked region boundary for the selected neuron.
+
+		Show GVF		:	Show gradient vector field for the image.
+							Zoom in the image to actually distinguish vector arrows.
+							Note: Decreases the scrolling speed significantly.
+							
+	Re-processing:
+		Remove regions	:	Removes all regions under the user-specified size (default: 1)
+		Retrack neurons	:	Tracks the points again under the user-specified constraint.
+							max_speed - maximum displacement possible for a neuron per frame (default: 6)
+		Restore default :	Restores the variables ot the state at which they were imported
+							(This option overrides all the others)
+							
+<variable_analysis2.m>
+
+	When run directly (without any arguments), it should open a window.
+	At the bottom, in the Menu panel, there should be two buttons called "Open" and "Quit".
+	The latter should be self-explanatory. Click the former and the user is prompted to select a folder.
+	Select a folder containing the ICE files and subfolders for all the z-levels.
+	The program assumes that all the z-levels have already been processed and combined ICE files have 
+	been produced.
+
+	The right panel should display the image while the left panel should display the intensity plot.
+
+	The sliders next to the image can be used to scroll through the time and z dimension while the vertical
+	slider next to the intensity plot can be used to scroll through the plots for different neurons.
+	
+	Radio button groups:
+		Image Selection
+		Image 1			:	Display Img-1
+		Image 2			:	Display Img-2
+		Image Combined	:	Display the superposition of Img-1 and Img-2
+
+		Image Processed
+		Original		:	Display original images (c_orig1/c_orig2)
+		Processed		:	Display processed images (c_proc1/c_proc2)
+		Segmented		:	Display segmented images (c_segm)
+
+	Toggle buttons:
+		Plot points		:	Superimpose centre points (red crosses) with the image displayed.
+							Green cross indicates the neuron selected in the intensity plot.
+
+		Plot labels		:	Superimpose label numbers with the image displayed.
+
+		Show mask		:	Show masked region boundary for the selected neuron.
+
+		Show GVF		:	Show gradient vector field for the image.
+							Zoom in the image to actually distinguish vector arrows.
+							Note: Decreases the scrolling speed significantly.
+							
+<combine_z_levels.m>
+
+	When run directly (without any arguments), it should open a window to select a folder.
+	Select the folder containing the original ICE files (i.e. 130529-1832).
+	It should then integrate the relevant variables in processed_variables.mat for each of the z-levels
+	and record them in ICE files.
+	Important note: The program assumes that all the z-levels have been already processed.
+	Variables integrated are: c_orig1, c_orig2, c_proc1, c_proc2, c_segm, c_dx, c_dy
+	
+<track_3D.m>
+
+	Receives path to a folder (i.e. 130529-1832) and combines the same neurons in different z-levels.
+	(Updates c_centre and c_aIratio variables)
+	
+<variable_analysis3.m>
+
+	Unlike processICE_multifolder.m, variable_analysis3.m processes each neuron individually at user's prompt.
+	When given a path to a folder (i.e. 130529-1832), it opens all the images (time-dimension and z-dimension),
+	navigable with sliders. Then the user can obtain initial points and analyze them automatically and/or manually.
