@@ -2,7 +2,7 @@ function acquireICE(modeApp)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                         acquireICE.m                               
-                                          Ver = '0.07';
+                                        Ver = '0.07';
 %                                 Oct. 04, 2012 by Ippei Kotera                      
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -83,7 +83,7 @@ waitPrePFS = 10; % As low as 0ms if LED is used.
 waitPFS = 100; % 150ms when LED is used. User larger value if PFS starts to fail.
 waitAfterLedForBCECF = 100; % Less than 100ms (exposure x 2 + this value) will result in fluctuation
 % waitAfterDaq = 0; % minimum ~50 ms to avoid intensity fluctuation after Daq communication, 
-                  % Could be 0 when LED is used
+% Could be 0 when LED is used
 % waitSnap = 3; % Wait after snapImage on MM. 3 ms seems to be sufficient to supress fluctuation
 waitSnap = 10;
 
@@ -291,7 +291,7 @@ main;
             switch modeLoop
                 
                 case 'startRun'
-                 %% Start Temperature Control
+                    %% Start Temperature Control
                     status = getStatus;
                     tStart = tic;
 
@@ -374,8 +374,8 @@ main;
                             % true. For ND acquisition it has to be at the end of the stack. For
                             % BCECF, it has to be the last cube.
                             if (strcmp(modeAcquisition, 'ND') && flgEndZ) ||... % for ND
-                               (strcmp(modeAcquisition, 'BCECF') && strcmp(stateCube, 'L')) ||... % for BCECF
-                               (strcmp(modeAcquisition, 'BCECF-ND') && strcmp(stateCube, 'L') && flgEndZ) % for BCECF-ND
+                                (strcmp(modeAcquisition, 'BCECF') && strcmp(stateCube, 'L')) ||... % for BCECF
+                                (strcmp(modeAcquisition, 'BCECF-ND') && strcmp(stateCube, 'L') && flgEndZ) % for BCECF-ND
                                 
                                 saveVariables;
                                 modeCamera = 'finalization';
@@ -437,9 +437,9 @@ main;
                     end
 
                     if  (strcmp(modeAcquisition, 'ND') || strcmp(modeAcquisition, 'BCECF-ND') )&&...
-                           ( strcmp(modeCamera, 'acquisition') ||...
-                             strcmp(modeCamera, 'postAcquisition') )
-                         
+                        ( strcmp(modeCamera, 'acquisition') ||...
+                        strcmp(modeCamera, 'postAcquisition') )
+
                         countUpFrameZ; % This has to be after the last frameZ/flgEndZ use
                     end
                     
@@ -616,7 +616,7 @@ main;
         setExposures;
         setEmGain;
         acquireInitialImages;
-  
+
         if strcmp(modeCamera, 'preAcquisition')
             prepareImageFiles;
         end
@@ -2510,7 +2510,7 @@ main;
     end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     function updateStaticUIComponents
-   
+
         % Set values and strings of the UI components
         set(handles.fig, 'Name', ['acquireICE ', Ver]);
         set(handles.fig, 'MenuBar', 'none');
@@ -2559,7 +2559,7 @@ main;
         set(handles.editIntervalLaser, 'String', intervalLaser);
         set(handles.editDurationLaser, 'String', zapDuration);
         set(handles.editPlanLaser, 'String', mat2str(planLaser),...
-                                   'TooltipString', mat2str(planLaser));
+                                    'TooltipString', mat2str(planLaser));
         set(handles.editRepeatLaser, 'String', repeatLaser);
         set(handles.editModulesLaser, 'String', modulesLaser);
         
@@ -2569,7 +2569,7 @@ main;
         set(handles.editWaitFinalBCECF, 'String', waitFinalBCECF);
         set(handles.editIntervalBCECF, 'String', intervalBCECF);
         set(handles.editPlanBCECF, 'String', mat2str(planBCECF),...
-                                   'TooltipString', mat2str(planBCECF));
+                                    'TooltipString', mat2str(planBCECF));
         set(handles.checkEnableBurstBCECF, 'Value', flgBurstBCECF);
         set(handles.checkIntervalBCECF, 'Value', flgIntervalBCECF);
         
@@ -2707,7 +2707,7 @@ main;
                 tempIni = 23;
                 tempFin = 28;
                 tempSlope = 0;
-                   
+
             otherwise % For all non-zap
                 flgBurstBCECF = false;
                 
@@ -2868,9 +2868,9 @@ main;
     end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     function setTrackingPlanes
-       set(handles.popupTrackingPlane,...
-           'String', cellstr(num2str((baseZ:stepZ:dimZ-stepZ)')), 'Value', 1);
-       % dimZ is actually z-dimension - z-step for back-compatibility
+        set(handles.popupTrackingPlane,...
+        'String', cellstr(num2str((baseZ:stepZ:dimZ-stepZ)')), 'Value', 1);
+        % dimZ is actually z-dimension - z-step for back-compatibility
     end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     function makeExperimentTitle
