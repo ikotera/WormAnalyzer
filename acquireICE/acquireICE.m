@@ -2926,7 +2926,6 @@ end
 
 strOut = [strOut{:}];
 lg = length(strOut);
-
 end
 
 
