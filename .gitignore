@@ -1,0 +1,24 @@
+# Python virtual environments
+venv/
+venv-*/
+.venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*.class
+
+# Temporary audio files
+temp_*.mp3
+numbers_*.mp3
+
+# IDE settings
+.vscode/
+.idea/
+
+# Environment variables
+.env
+
+# Specstory files
+.specstory/
+.specstory/**/*
